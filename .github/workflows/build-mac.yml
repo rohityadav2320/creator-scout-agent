@@ -1,4 +1,4 @@
-name: Build Mac Package
+name: Build Mac Binary
 
 on:
   push:
@@ -7,11 +7,20 @@ on:
 
 jobs:
   build-mac:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install pyinstaller supabase toml playwright playwright-stealth requests pandas openpyxl
 
       - name: Inject credentials
         env:
