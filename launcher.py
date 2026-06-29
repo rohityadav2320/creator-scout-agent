@@ -46,12 +46,21 @@ def ensure_browser():
         from playwright.sync_api import sync_playwright
         with sync_playwright() as p:
             if os.path.exists(p.chromium.executable_path):
-                return
+                return  # Already installed
     except Exception:
-        pass
+        return  # Can't check — assume installed, let scraper handle it
+    # Browser not found — try to install using system python
     print("📦 Downloading browser (~150 MB) — one-time only, please wait...\n")
-    subprocess.run([sys.executable, "-m", "playwright", "install", "chromium"],
-                   check=False)
+    for python in ["python3", "python"]:
+        try:
+            result = subprocess.run(
+                [python, "-m", "playwright", "install", "chromium"],
+                timeout=300, check=False
+            )
+            if result.returncode == 0:
+                return
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            continue
 
 
 def main():
