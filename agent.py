@@ -94,10 +94,13 @@ def _run_job(job, account):
         if err:
             return 0, err
         reels = reels or []
-        # Filter by min followers
+        # Filter by min/max followers
         min_fol = int(params.get("min_followers", 0))
+        max_fol = int(params.get("max_followers", 0))
         if min_fol:
             reels = [r for r in reels if int(r.get("followers", 0) or 0) >= min_fol]
+        if max_fol:
+            reels = [r for r in reels if int(r.get("followers", 0) or 0) <= max_fol]
         # Filter by hashtags — only keep reels whose caption/hashtags contain any of the given tags
         feed_tags = [t.strip().lower().lstrip("#") for t in params.get("feed_hashtags", []) if t.strip()]
         if feed_tags:
