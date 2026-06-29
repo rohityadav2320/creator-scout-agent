@@ -137,10 +137,29 @@ def main():
         return
 
     account = _account_label()
-    label = account or "agent"
-    print(f"✅ Agent '{label}' online. Watching for jobs…  (Ctrl+C to stop)")
+
+    # First-run: ask for name if not set
     if not account:
-        print("ℹ️  No AGENT_ACCOUNT set — this agent will pick up jobs for ANY account.")
+        print("=" * 50)
+        print("  Welcome to Creator Scout Agent!")
+        print("=" * 50)
+        name = ""
+        while not name.strip():
+            name = input("  Enter your name (e.g. Priya): ").strip()
+        account = name
+        # Save so they don't need to type it again
+        p = os.path.join(_DIR, "agent_account.txt")
+        try:
+            with open(p, "w") as f:
+                f.write(account)
+            print(f"  ✅ Name saved! Next time you won't need to type it again.")
+        except Exception:
+            pass
+        print()
+
+    label = account
+    print(f"✅ Agent '{label}' online. Watching for jobs…  (Ctrl+C to stop)")
+    print("   Keep this window open while scraping. Minimise is fine.")
 
     while True:
         try:
