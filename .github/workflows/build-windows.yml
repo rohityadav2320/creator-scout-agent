@@ -1,0 +1,53 @@
+name: Build Windows Binary
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install pyinstaller supabase toml playwright playwright-stealth requests pandas openpyxl
+
+      - name: Inject credentials
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          @"
+          SUPABASE_URL = "$env:SUPABASE_URL"
+          SUPABASE_KEY = "$env:SUPABASE_KEY"
+          "@ | Set-Content _build_creds.py
+
+      - name: Build Windows binary
+        run: |
+          python -m PyInstaller `
+            --onefile `
+            --name "CreatorScout-Agent-Windows" `
+            --hidden-import supabase `
+            --hidden-import toml `
+            --hidden-import playwright `
+            --hidden-import playwright.sync_api `
+            --hidden-import playwright_stealth `
+            --hidden-import db `
+            --hidden-import scraper `
+            --hidden-import agent `
+            launcher.py
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CreatorScout-Agent-Windows
+          path: dist/CreatorScout-Agent-Windows.exe
+          retention-days: 30

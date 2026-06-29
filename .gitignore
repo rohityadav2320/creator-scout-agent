@@ -1,0 +1,27 @@
+# Secrets & sessions — never commit these
+.streamlit/secrets.toml
+session_state.json
+.env
+_build_creds.py
+config.txt
+agent_account.txt
+
+# Build output
+dist/
+build/
+*.spec
+
+# Browser profiles & sessions
+browser_profiles/
+ig_sessions/
+seen_usernames.json
+
+# Scraper output & debug
+debug/
+results/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
