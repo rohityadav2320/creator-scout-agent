@@ -115,6 +115,13 @@ def _run_job(job, account):
     if err:
         return 0, err
     reels = reels or []
+    # Filter by min/max followers
+    min_fol = int(params.get("min_followers", 0))
+    max_fol = int(params.get("max_followers", 0))
+    if min_fol:
+        reels = [r for r in reels if int(r.get("followers", 0) or 0) >= min_fol]
+    if max_fol:
+        reels = [r for r in reels if int(r.get("followers", 0) or 0) <= max_fol]
     if reels:
         db.upsert_reels(reels, scraped_by=created_by, scraped_from=ig_account)
     return len(reels), None
