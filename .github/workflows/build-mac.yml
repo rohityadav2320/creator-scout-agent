@@ -21,23 +21,27 @@ jobs:
           echo "SUPABASE_URL = \"$SUPABASE_URL\"" > _build_creds.py
           echo "SUPABASE_KEY = \"$SUPABASE_KEY\"" >> _build_creds.py
 
-      - name: Make .command executable
-        run: chmod +x "Start CreatorScout.command"
-
-      - name: Create Mac ZIP
+      - name: Build Mac binary
         run: |
-          zip CreatorScout-Agent-Mac.zip \
-            agent.py scraper.py db.py launcher.py filters.py \
-            feed_scraper.py hashtag_library.py presets.py \
-            _build_creds.py requirements.txt \
-            "Start CreatorScout.command"
+          python -m PyInstaller \
+            --onefile \
+            --name "CreatorScout-Agent-Mac" \
+            --hidden-import supabase \
+            --hidden-import toml \
+            --hidden-import playwright \
+            --hidden-import playwright.sync_api \
+            --hidden-import playwright_stealth \
+            --hidden-import db \
+            --hidden-import scraper \
+            --hidden-import agent \
+            launcher.py
 
       - name: Publish to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
           name: "Creator Scout Agent — Latest"
-          files: CreatorScout-Agent-Mac.zip
+          files: dist/CreatorScout-Agent-Mac
           make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
