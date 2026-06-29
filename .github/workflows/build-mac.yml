@@ -1,4 +1,4 @@
-name: Build Windows Binary
+name: Build Mac Binary
 
 on:
   push:
@@ -6,8 +6,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-windows:
-    runs-on: windows-latest
+  build-mac:
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -25,24 +25,22 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
         run: |
-          @"
-          SUPABASE_URL = "$env:SUPABASE_URL"
-          SUPABASE_KEY = "$env:SUPABASE_KEY"
-          "@ | Set-Content _build_creds.py
+          echo "SUPABASE_URL = \"$SUPABASE_URL\"" > _build_creds.py
+          echo "SUPABASE_KEY = \"$SUPABASE_KEY\"" >> _build_creds.py
 
-      - name: Build Windows binary
+      - name: Build Mac binary
         run: |
-          python -m PyInstaller `
-            --onefile `
-            --name "CreatorScout-Agent-Windows" `
-            --hidden-import supabase `
-            --hidden-import toml `
-            --hidden-import playwright `
-            --hidden-import playwright.sync_api `
-            --hidden-import playwright_stealth `
-            --hidden-import db `
-            --hidden-import scraper `
-            --hidden-import agent `
+          python -m PyInstaller \
+            --onefile \
+            --name "CreatorScout-Agent-Mac" \
+            --hidden-import supabase \
+            --hidden-import toml \
+            --hidden-import playwright \
+            --hidden-import playwright.sync_api \
+            --hidden-import playwright_stealth \
+            --hidden-import db \
+            --hidden-import scraper \
+            --hidden-import agent \
             launcher.py
 
       - name: Publish to GitHub Release
@@ -50,7 +48,7 @@ jobs:
         with:
           tag_name: latest
           name: "Creator Scout Agent — Latest"
-          files: dist/CreatorScout-Agent-Windows.exe
+          files: dist/CreatorScout-Agent-Mac
           make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
