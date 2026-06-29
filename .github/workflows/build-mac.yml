@@ -1,4 +1,4 @@
-name: Build Mac Binary
+name: Build Mac Package
 
 on:
   push:
@@ -7,20 +7,11 @@ on:
 
 jobs:
   build-mac:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install dependencies
-        run: |
-          pip install pyinstaller supabase toml playwright playwright-stealth requests pandas openpyxl
 
       - name: Inject credentials
         env:
@@ -30,27 +21,23 @@ jobs:
           echo "SUPABASE_URL = \"$SUPABASE_URL\"" > _build_creds.py
           echo "SUPABASE_KEY = \"$SUPABASE_KEY\"" >> _build_creds.py
 
-      - name: Build Mac binary
+      - name: Make .command executable
+        run: chmod +x "Start CreatorScout.command"
+
+      - name: Create Mac ZIP
         run: |
-          python -m PyInstaller \
-            --onefile \
-            --name "CreatorScout-Agent-Mac" \
-            --hidden-import supabase \
-            --hidden-import toml \
-            --hidden-import playwright \
-            --hidden-import playwright.sync_api \
-            --hidden-import playwright_stealth \
-            --hidden-import db \
-            --hidden-import scraper \
-            --hidden-import agent \
-            launcher.py
+          zip CreatorScout-Agent-Mac.zip \
+            agent.py scraper.py db.py launcher.py filters.py \
+            feed_scraper.py hashtag_library.py presets.py \
+            _build_creds.py requirements.txt \
+            "Start CreatorScout.command"
 
       - name: Publish to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
           name: "Creator Scout Agent — Latest"
-          files: dist/CreatorScout-Agent-Mac
+          files: CreatorScout-Agent-Mac.zip
           make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
