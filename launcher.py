@@ -10,6 +10,11 @@ import subprocess
 # Stable data directory — survives across binary runs
 DATA_DIR = os.path.join(os.path.expanduser("~"), "CreatorScout")
 NAME_FILE = os.path.join(DATA_DIR, "name.txt")
+# Browsers go in a STABLE folder (not the temp _MEIPASS bundle dir that gets
+# wiped every run). MUST be set before Playwright is imported anywhere.
+BROWSERS_DIR = os.path.join(DATA_DIR, "ms-playwright")
+os.makedirs(BROWSERS_DIR, exist_ok=True)
+os.environ["PLAYWRIGHT_BROWSERS_PATH"] = BROWSERS_DIR
 
 # Team credentials — injected at build time (see _build_creds.py, gitignored)
 try:
@@ -42,20 +47,40 @@ def get_name():
 
 
 def ensure_browser():
+    # Already installed in our stable folder?
     try:
         from playwright.sync_api import sync_playwright
         with sync_playwright() as p:
             if os.path.exists(p.chromium.executable_path):
                 return  # Already installed
     except Exception:
-        return  # Can't check — assume installed, let scraper handle it
-    # Browser not found — try to install using system python
-    print("📦 Downloading browser (~150 MB) — one-time only, please wait...\n")
+        pass
+
+    print("📦 First run: downloading browser (~150 MB). Takes a few minutes — please wait...\n")
+
+    # Install using the Playwright driver that's BUNDLED inside this app
+    # (works even with no system Python / no pip).
+    try:
+        from playwright.__main__ import main as pw_main
+        old_argv = sys.argv
+        sys.argv = ["playwright", "install", "chromium"]
+        try:
+            pw_main()
+        except SystemExit:
+            pass
+        finally:
+            sys.argv = old_argv
+        print("\n✅ Browser ready.\n")
+        return
+    except Exception as e:
+        print(f"⚠️  Bundled install failed ({e}); trying system Python...\n")
+
+    # Fallback: system python (only if available)
     for python in ["python3", "python"]:
         try:
             result = subprocess.run(
                 [python, "-m", "playwright", "install", "chromium"],
-                timeout=300, check=False
+                env={**os.environ}, timeout=600, check=False
             )
             if result.returncode == 0:
                 return

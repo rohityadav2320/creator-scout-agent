@@ -37,10 +37,12 @@ jobs:
           python -m PyInstaller `
             --onefile `
             --name "CreatorScout-Agent-Windows" `
+            --collect-all playwright `
             --hidden-import supabase `
             --hidden-import toml `
             --hidden-import playwright `
             --hidden-import playwright.sync_api `
+            --hidden-import playwright.__main__ `
             --hidden-import playwright_stealth `
             --hidden-import db `
             --hidden-import scraper `
