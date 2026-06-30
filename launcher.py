@@ -46,6 +46,45 @@ def get_name():
     return name
 
 
+def start_identity_server(name):
+    """Expose this agent's name on localhost so the web portal can detect that
+    it's running on THIS machine and lock the 'Your name' field to it.
+    Binds to 127.0.0.1 only (no firewall prompt, not reachable from network)."""
+    import threading
+    import json
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+
+    class Handler(BaseHTTPRequestHandler):
+        def _send(self, code=200):
+            self.send_response(code)
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Access-Control-Allow-Private-Network", "true")
+            self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+
+        def do_OPTIONS(self):
+            self._send(204)
+
+        def do_GET(self):
+            self._send(200)
+            self.wfile.write(json.dumps({"name": name}).encode())
+
+        def log_message(self, *args):
+            pass  # stay quiet
+
+    def run():
+        for port in (17613, 17614, 17615):
+            try:
+                srv = HTTPServer(("127.0.0.1", port), Handler)
+                srv.serve_forever()
+                return
+            except OSError:
+                continue  # port busy, try next
+
+    threading.Thread(target=run, daemon=True).start()
+
+
 def ensure_browser():
     # Already installed in our stable folder?
     try:
@@ -104,6 +143,9 @@ def main():
         sys.path.insert(0, sys._MEIPASS)
 
     ensure_browser()
+
+    # Let the web portal auto-detect this agent on this machine
+    start_identity_server(name)
 
     print(f"🚀 Starting as '{name}'... (Ctrl+C to stop)\n")
 
