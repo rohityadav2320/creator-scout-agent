@@ -361,7 +361,7 @@ async def inject_session_cookie(context, session_id: str):
 
 
 async def ensure_logged_in(page, context, username=None, progress_callback=None,
-                           timeout_seconds=300, session_id=None):
+                           timeout_seconds=600, session_id=None):
     """
     Preferred: if session_id is provided, inject it directly (no browser login needed).
     Fallback: check saved profile cookies, then open the login page for manual login.
