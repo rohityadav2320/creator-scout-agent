@@ -1,5 +1,4 @@
 import re
-from langdetect import detect, LangDetectException
 
 # Words to strip when extracting keywords from a natural-language description query.
 _QUERY_STOP_WORDS = {
@@ -300,13 +299,8 @@ def detect_language(text, hashtags=None):
         for lang_code, tag_set in LANG_HASHTAGS.items():
             if reel_tags & tag_set:
                 return lang_code
-    # Step 2: langdetect fallback on caption text
-    if not text or len(text.strip()) < 10:
-        return "unknown"
-    try:
-        return detect(text)
-    except LangDetectException:
-        return "unknown"
+    # Step 2: fallback
+    return "unknown"
 
 
 def detect_content_type(caption, description=""):
